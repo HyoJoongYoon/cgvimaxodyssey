@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 CO_CD = "A420"  # CGV 회사코드
 SITE_NO = "0257"  # 광교 CGV 극장코드
 MOV_NO = "30001323"  # 오디세이 영화코드
-TARGET_DATE = "20260809"  # 상영일자 [테스트용 임시값 - 원래 8/10]
+TARGET_DATE = "20260810"  # 상영일자 (8/10)
 RTCTL_SCOP_CD = "08"
 SCREEN_KEYWORD = "IMAX"  # 상영관 필터 키워드
 
@@ -108,7 +108,7 @@ def check_once(notified_keys: set) -> set:
         logger.info("아직 예매 미오픈 (전체 스케줄 %d건)", len(schedules))
 
     for item in targets:
-        key = (item["scnsNo"], item["scnSseq"], item["scnsrtTm"])
+        key = (item["scnYmd"], item["scnsNo"], item["scnSseq"], item["scnsrtTm"])
         if key in notified_keys:
             continue
         notified_keys.add(key)
