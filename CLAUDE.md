@@ -41,8 +41,13 @@ python main.py --once
 
 ## GitHub Actions로 무료 24시간 감시
 
-`.github/workflows/cgv-alert.yml`이 5분 간격 cron으로 `python main.py --once`를 실행하고,
+`.github/workflows/cgv-alert.yml`이 `workflow_dispatch`(수동/API 트리거)로 `python main.py --once`를 실행하고,
 `notified_state.json`을 커밋해서 실행 간 중복 알림 상태를 유지한다.
+
+GitHub의 자체 `schedule:` cron 트리거는 5분 간격으로 설정해도 실제로는 GitHub 서버 부하에 따라 수십 분씩 지연되는
+경우가 많아서(공식 문서화된 제약) 사용하지 않는다. 대신 외부 무료 cron 서비스(cron-job.org)가 GitHub REST API의
+`workflow_dispatch` 엔드포인트를 주기적으로 직접 호출해서 워크플로우를 트리거한다 — API 호출은 GitHub의 저우선순위
+schedule 큐를 거치지 않아서 훨씬 정확한 시간에 실행된다.
 
 설정 순서:
 1. 이 저장소를 GitHub에 push
@@ -50,8 +55,16 @@ python main.py --once
 3. 저장소 Settings → Secrets and variables → Actions → New repository secret
    - `TELEGRAM_BOT_TOKEN`
    - `TELEGRAM_CHAT_ID`
-4. Actions 탭에서 워크플로우를 수동 실행(`workflow_dispatch`)해서 정상 동작 확인
+4. GitHub에서 이 저장소의 Actions에 한정된 fine-grained PAT 발급 (Settings → Developer settings →
+   Personal access tokens → Fine-grained tokens, 이 저장소만 선택, Actions 권한 Read and write)
+5. [cron-job.org](https://cron-job.org)에 무료 가입 후 cron job 생성:
+   - URL: `https://api.github.com/repos/HyoJoongYoon/cgvimaxodyssey/actions/workflows/cgv-alert.yml/dispatches`
+   - Method: `POST`
+   - Headers: `Accept: application/vnd.github+json`, `Authorization: Bearer <PAT>`, `X-GitHub-Api-Version: 2022-11-28`
+   - Body: `{"ref":"master"}`
+   - 실행 주기: 3~5분 (GitHub Actions 무료 분당 사용량 한도를 고려해서 너무 짧게 잡지 않는다)
+6. Actions 탭에서 워크플로우를 수동 실행(`workflow_dispatch`)해서 정상 동작 확인, cron-job.org 실행 로그로 주기적 트리거 확인
 
-cron 최소 간격이 5분이고 GitHub 부하에 따라 실제 실행이 지연될 수 있어, 초 단위로 빠른 반응이 필요하면 로컬/서버에서 상시 실행하는 쪽이 낫다.
+GitHub Actions 무료 분(분당 청구) 한도를 넘지 않도록 cron 주기와 계정 Billing의 spending limit 설정을 확인해둔다.
 
 There is no build system, linter, or test framework set up yet. When those are added, update this file with the actual commands.
