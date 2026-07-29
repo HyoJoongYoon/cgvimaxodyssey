@@ -67,6 +67,11 @@ def is_target_screen(item: dict) -> bool:
     return SCREEN_KEYWORD in (item.get("scnsNm") or "") or SCREEN_KEYWORD in (item.get("movkndDsplNm") or "")
 
 
+def is_booking_open(item: dict) -> bool:
+    """cntlYn(예매 통제 여부)이 N이어야 실제로 '예매 준비중'이 아니라 예매 가능한 상태다."""
+    return item.get("cntlYn") == "N"
+
+
 def format_message(item: dict) -> str:
     start_time = item["scnsrtTm"]
     time_str = f"{start_time[:2]}:{start_time[2:]}"
@@ -102,7 +107,7 @@ def save_notified_keys(keys: set) -> None:
 def check_once(notified_keys: set) -> set:
     """스케줄을 한 번 확인하고, 새로 발견된 스케줄에 대해 알림을 보낸 뒤 갱신된 notified_keys를 반환한다."""
     schedules = fetch_schedules()
-    targets = [item for item in schedules if is_target_screen(item)]
+    targets = [item for item in schedules if is_target_screen(item) and is_booking_open(item)]
 
     if not targets:
         logger.info("아직 예매 미오픈 (전체 스케줄 %d건)", len(schedules))
