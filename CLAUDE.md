@@ -7,8 +7,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 CGV 예매 오픈 알리미 챗봇. `main.py`가 CGV 상영 스케줄 API(`searchSchByMov`)를 주기적으로 폴링해서,
 지정한 영화/극장/날짜/상영관 조건의 좌석 예매가 열리면 텔레그램으로 알림을 보낸다.
 
-감시 대상은 `main.py` 상단 상수로 하드코딩되어 있다 (영화: 오디세이 / 극장: 광교 CGV / 상영관: IMAX / 날짜: 2026-08-10).
+감시 대상은 `main.py` 상단 상수로 하드코딩되어 있다 (영화: 스파이더맨-브랜드 뉴 데이 / 극장: 용산아이파크몰 CGV /
+상영관: SCREENX관(리클라이너) with PRIVATE BOX / 날짜: 2026-08-23).
 다른 영화·극장·날짜를 감시하려면 이 상수들을 바꾸면 된다 (`MOV_NO`, `SITE_NO`, `TARGET_DATE`, `SCREEN_KEYWORD`).
+
+영화의 `movNo`, 극장의 `siteNo`는 공개된 검색 API가 없어서 브라우저 개발자도구 Network 탭에서 `searchSchByMov`
+요청을 직접 캡처해서 알아내야 한다 (Referer가 있는 예매 페이지에서 영화·극장·날짜를 선택하면 발생함).
 
 CGV 스케줄 API는 인증이 필요 없고, `Referer` 헤더만 있으면 응답한다 (2026-07-25 기준 확인됨).
 

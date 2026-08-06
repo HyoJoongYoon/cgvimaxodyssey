@@ -26,11 +26,11 @@ logger = logging.getLogger(__name__)
 
 # ---- 감시 대상 ----
 CO_CD = "A420"  # CGV 회사코드
-SITE_NO = "0257"  # 광교 CGV 극장코드
-MOV_NO = "30001323"  # 오디세이 영화코드
-TARGET_DATE = "20260810"  # 상영일자 (8/10)
+SITE_NO = "0013"  # 용산아이파크몰 CGV 극장코드
+MOV_NO = "30001192"  # 스파이더맨-브랜드 뉴 데이 영화코드
+TARGET_DATE = "20260823"  # 상영일자 (8/23)
 RTCTL_SCOP_CD = "08"
-SCREEN_KEYWORD = "IMAX"  # 상영관 필터 키워드
+SCREEN_KEYWORD = "PRIVATE BOX"  # 상영관 필터 키워드 (SCREENX관(리클라이너) with PRIVATE BOX)
 
 SCHEDULE_API_URL = "https://cgv.co.kr/api/v1/booking/searchSchByMov"
 BOOKING_PAGE_URL = "https://cgv.co.kr/cnm/movieBook/movie"
