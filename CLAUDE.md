@@ -4,15 +4,24 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project status
 
-CGV 예매 오픈 알리미 챗봇. `main.py`가 CGV 상영 스케줄 API(`searchSchByMov`)를 주기적으로 폴링해서,
-지정한 영화/극장/날짜/상영관 조건의 좌석 예매가 열리면 텔레그램으로 알림을 보낸다.
+CGV 예매/좌석 알리미 챗봇. `main.py`가 CGV 상영 스케줄 API(`searchSchByMov`)를 주기적으로 폴링해서,
+`WATCHES` 리스트에 등록된 여러 감시 대상 각각의 조건을 만족하면 텔레그램으로 알림을 보낸다.
 
-감시 대상은 `main.py` 상단 상수로 하드코딩되어 있다 (영화: 스파이더맨-브랜드 뉴 데이 / 극장: 용산아이파크몰 CGV /
-상영관: SCREENX관(리클라이너) with PRIVATE BOX / 날짜: 2026-08-23).
-다른 영화·극장·날짜를 감시하려면 이 상수들을 바꾸면 된다 (`MOV_NO`, `SITE_NO`, `TARGET_DATE`, `SCREEN_KEYWORD`).
+감시 대상은 `main.py` 상단 `WATCHES` 리스트에 하드코딩되어 있다. 각 항목은 영화(`mov_no`)/극장(`site_no`)/
+날짜(`scn_ymd`)/상영관 키워드(`screen_keyword`)를 지정하고, `mode`로 알림 조건을 고른다.
+
+- `mode: "booking_open"` — `cntlYn`(예매 통제 여부)이 `N`으로 바뀌는 순간(예매 준비중 → 예매 오픈) 딱 한 번 알림
+- `mode: "seat_threshold"` — 잔여좌석(`frSeatCnt`)이 `min_free_seats` 미만 → 이상으로 바뀔 때마다(취소표 등으로 좌석이 늘어남) 알림. 특정 회차만 보려면 `start_time`(HHMM)을 지정
+
+현재 등록된 감시 대상: 스파이더맨-브랜드 뉴 데이 / 용산아이파크몰 CGV / SCREENX관(리클라이너) with PRIVATE BOX —
+8/23 예매 오픈 감지, 8/16 20:00 회차 좌석 4석 이상(현재 장애인석 2석만 남은 상태) 감지.
 
 영화의 `movNo`, 극장의 `siteNo`는 공개된 검색 API가 없어서 브라우저 개발자도구 Network 탭에서 `searchSchByMov`
 요청을 직접 캡처해서 알아내야 한다 (Referer가 있는 예매 페이지에서 영화·극장·날짜를 선택하면 발생함).
+
+좌석별 위치(블럭/열/좌석번호)를 조회하는 API(`searchIfSeatData`)는 CGV 로그인 세션(`Authorization: Bearer`,
+`refresh_token` 등)이 있어야 응답하므로, 로그인 자동화 없이는 쓸 수 없다. 그래서 좌석 "위치"가 아니라 좌석
+"개수" 임계값으로 좋은 자리 확보 여부를 근사한다.
 
 CGV 스케줄 API는 인증이 필요 없고, `Referer` 헤더만 있으면 응답한다 (2026-07-25 기준 확인됨).
 
@@ -34,8 +43,9 @@ cp .env.example .env   # 그 다음 .env에 TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
 python main.py
 ```
 
-무한 루프로 계속 실행되며 (기본 30초 간격 폴링), 새로운 상영 스케줄을 감지할 때마다 텔레그램으로 알림을 보낸다.
-중복 알림은 방지되며 (`notified_state.json`에 기록), 네트워크 오류가 나도 죽지 않고 재시도한다.
+무한 루프로 계속 실행되며 (기본 30초 간격 폴링), `WATCHES`의 각 감시 대상 조건을 만족할 때마다 텔레그램으로 알림을 보낸다.
+중복 알림은 방지되며 (`notified_state.json`에 `{"notified": [...], "seat_watch": {...}}` 형태로 기록),
+네트워크 오류가 나도 죽지 않고 재시도한다.
 
 1회만 확인하고 종료하는 모드 (GitHub Actions 등 CI 환경용):
 
